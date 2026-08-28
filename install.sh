@@ -88,18 +88,33 @@ ok "SQLite-DB initialisiert (Login admin/admin)"
 # ---------------------------------------------------------------- Lizenz
 log "Hardware-Lizenz generieren (Pi-Seriennummer + HMAC)"
 SECRET_FILE="$APP_DIR/.secret"
-LICENSE_FILE="$APP_DIR/license.key"
-if [ ! -f "$SECRET_FILE" ]; then
+# Secret-Quelle (Priorität): 1) SAFETY_SECRET env, 2) /boot/safety-secret.txt, 3) zufällig
+if [ -n "${SAFETY_SECRET:-}" ]; then
+    printf '%s' "$SAFETY_SECRET" > "$SECRET_FILE"
+    chmod 600 "$SECRET_FILE"
+    ok "Secret aus SAFETY_SECRET übernommen"
+elif [ -f /boot/safety-secret.txt ]; then
+    cp /boot/safety-secret.txt "$SECRET_FILE"
+    chmod 600 "$SECRET_FILE"
+    ok "Secret aus /boot/safety-secret.txt übernommen"
+elif [ -f /boot/firmware/safety-secret.txt ]; then
+    cp /boot/firmware/safety-secret.txt "$SECRET_FILE"
+    chmod 600 "$SECRET_FILE"
+    ok "Secret aus /boot/firmware/safety-secret.txt übernommen"
+elif [ -f "$SECRET_FILE" ]; then
+    ok "Vorhandenes Secret wird weiterverwendet"
+else
     head -c 32 /dev/urandom | base64 > "$SECRET_FILE"
     chmod 600 "$SECRET_FILE"
+    warn "Zufälliges Secret erzeugt (Basis-Schutz: verhindert SD-Karten-Kopie)."
+    warn "Für echten Schutz: SAFETY_SECRET/Datei nutzen und das Secret NUR bei dir aufbewahren."
 fi
-SERIAL="$(grep -i '^Serial' /proc/cpuinfo | cut -d: -f2 | tr -d '[:space:]')"
-if [ -z "$SERIAL" ]; then warn "Kein Pi erkannt (/proc/cpuinfo ohne Serial) — Lizenz-Key leer (Dev)."; fi
-KEY="$(SECRET="$(cat "$SECRET_FILE")" SERIAL="$SERIAL" "$APP_DIR/venv/bin/python" -c \
-    'import hmac,hashlib,os; print(hmac.new(os.environ["SECRET"].encode(), os.environ["SERIAL"].encode(), hashlib.sha256).hexdigest())')"
-echo "$KEY" > "$LICENSE_FILE"
-chmod 600 "$LICENSE_FILE"
-ok "Lizenz-Key geschrieben ($LICENSE_FILE)"
+# Key über license.py erzeugen (eine Quelle der Wahrheit)
+if "$APP_DIR/venv/bin/python" "$APP_DIR/license.py" --make-key >/dev/null 2>&1; then
+    ok "Lizenz-Key geschrieben (gebunden an die Seriennummer dieses Pi)"
+else
+    warn "Lizenz-Key konnte nicht erzeugt werden (kein Pi erkannt?)."
+fi
 
 # ---------------------------------------------------------------- Kiosk-Skript
 log "Kiosk-Startskript schreiben"

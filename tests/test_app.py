@@ -57,6 +57,20 @@ def test_license_compute_deterministic_and_bound():
     assert license.compute_key("abc", "secret") != license.compute_key("xyz", "secret")
 
 
+def test_license_is_valid_bound_to_serial(tmp_path, monkeypatch):
+    sp = tmp_path / ".secret"
+    lp = tmp_path / "license.key"
+    monkeypatch.setattr(license, "_secret_path", lambda: str(sp))
+    monkeypatch.setattr(license, "_license_path", lambda: str(lp))
+    monkeypatch.setattr(license, "get_serial", lambda: "10000000abcdef")
+    sp.write_text("geheim")
+    assert license.make_key("geheim") is not None
+    assert license.is_valid() is True
+    # Image/SD-Karte auf einen anderen Pi kopiert -> andere Seriennummer -> gesperrt
+    monkeypatch.setattr(license, "get_serial", lambda: "10000000ZZZZZZ")
+    assert license.is_valid() is False
+
+
 def test_board_route():
     assert app.test_client().get("/").status_code == 200
 
