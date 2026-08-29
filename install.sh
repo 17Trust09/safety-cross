@@ -16,6 +16,7 @@ set -Eeuo pipefail
 
 APP_DIR=/opt/safety-cross
 APP_PORT=8002
+LICENSE_FILE="$APP_DIR/license.key"
 USER="${SUDO_USER:-pi}"
 CONFIG=""
 if [ -f /boot/firmware/config.txt ]; then CONFIG=/boot/firmware/config.txt; else CONFIG=/boot/config.txt; fi
