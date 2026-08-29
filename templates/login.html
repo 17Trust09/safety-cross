@@ -14,21 +14,17 @@
 </div>
 
 <script>
-  // Cursor nach 30 s Inaktivität ausblenden; Rückkehr zur Anzeige nach 60 s
+  // Rückkehr zur Anzeige nach 60 s Inaktivität
   (function () {
-    var HIDE_MS = 30000, BACK_MS = 60000;
-    var hideTimer, backTimer;
-    function activity() {
-      document.body.classList.remove("hide-cursor");
-      clearTimeout(hideTimer);
+    var BACK_MS = 60000, backTimer;
+    function reset() {
       clearTimeout(backTimer);
-      hideTimer = setTimeout(function () { document.body.classList.add("hide-cursor"); }, HIDE_MS);
       backTimer = setTimeout(function () { window.location.href = "{{ url_for('board') }}"; }, BACK_MS);
     }
     ["mousemove", "mousedown", "keydown", "touchstart", "click", "scroll", "wheel"].forEach(function (evt) {
-      document.addEventListener(evt, activity, true);
+      document.addEventListener(evt, reset, true);
     });
-    activity();
+    reset();
   })();
 </script>
 {% endblock %}

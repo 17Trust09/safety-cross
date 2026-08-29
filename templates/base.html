@@ -6,12 +6,28 @@
 <title>Safety Cross – Lufthansa Technik</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<body class="{{ 'kiosk-mode' if active_tab == 'anzeige' else '' }}">
+<body class="hide-cursor">
 <nav class="tabbar">
   <div class="brand"><span>LUFTHANSA</span></div>
   <a class="tab {% if active_tab == 'anzeige' %}active{% endif %}" href="{{ url_for('board') }}">Anzeige</a>
   <a class="tab {% if active_tab == 'admin' %}active{% endif %}" href="{{ url_for('admin') }}">Admin</a>
 </nav>
 {% block content %}{% endblock %}
+<script>
+  // Cursor: bei Bewegung einblenden, nach 30 s Inaktivität wieder ausblenden
+  (function () {
+    var HIDE_MS = 30000, hideTimer;
+    function showCursor() {
+      document.body.classList.remove("hide-cursor");
+      clearTimeout(hideTimer);
+      hideTimer = setTimeout(function () {
+        document.body.classList.add("hide-cursor");
+      }, HIDE_MS);
+    }
+    ["mousemove", "mousedown", "touchstart", "keydown", "wheel"].forEach(function (evt) {
+      document.addEventListener(evt, showCursor, true);
+    });
+  })();
+</script>
 </body>
 </html>
