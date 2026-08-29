@@ -299,3 +299,31 @@ a.tab{text-decoration:none}
 .unfall-form{display:flex;flex-wrap:wrap;gap:10px}
 .unfall-form input[type=date],.unfall-form select{flex:1;min-width:150px}
 
+/* ===== Full-HD-Kiosk (1920x1080): größere Schrift, gut lesbar auf Distanz =====
+   Nur die Anzeige-/Board-Ansicht (.kiosk-*), Admin bleibt unverändert. */
+.kiosk-header{padding:24px 40px 26px}
+.kiosk-title h1{font-size:46px}
+.kiosk-title .sub{font-size:16px}
+.kiosk-meta .date{font-size:18px}
+.kiosk-meta .safe{padding:13px 34px}
+.kiosk-meta .safe span{font-size:13px}
+.kiosk-meta .safe b{font-size:78px}
+
+.kiosk-body{grid-template-columns:380px 1fr;gap:28px;padding:24px 40px 30px}
+
+.abteilung{font-size:32px;padding:16px 32px}
+.meister{font-size:22px}
+.ersthelfer h2{font-size:25px}
+.ersthelfer li{font-size:20px}
+.ersthelfer .avatar{width:44px;height:44px;font-size:15px}
+.ersthelfer .role{font-size:13px}
+
+.cross-panel{padding:22px}
+.cross-panel .month-title{font-size:28px;margin-bottom:14px}
+.cross-panel .month-title small{font-size:16px}
+.cross-panel .grid{gap:14px;max-width:660px}
+.cross-panel .day{font-size:30px}
+.cross-panel .day.center{font-size:54px}
+.legend{font-size:20px;gap:30px;margin-top:18px}
+.legend .dot{width:21px;height:21px}
+

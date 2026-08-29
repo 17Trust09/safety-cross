@@ -47,6 +47,10 @@ log "Uhr konfigurieren (RTC, wenn vorhanden, sonst fake-hwclock)"
 # I2C aktivieren + DS3231-Overlay (harmlos ohne RTC)
 append_line "$CONFIG" "dtparam=i2c_arm=on"
 append_line "$CONFIG" "dtoverlay=i2c-rtc,ds3231"
+# HDMI-Fallback auf Full-HD (wie LHTPi): auch ohne EDID sicher 1080p
+append_line "$CONFIG" "hdmi_force_hotplug=1"
+append_line "$CONFIG" "hdmi_group=2"
+append_line "$CONFIG" "hdmi_mode=82"
 
 modprobe i2c-dev 2>/dev/null || true
 if i2cdetect -y 1 2>/dev/null | grep -qiE "68"; then
@@ -133,6 +137,9 @@ for i in $(seq 1 30); do
     sleep 2
 done
 
+# Feste Auflösung: Full-HD 1920x1080 (wie LHTPi/Terminboard)
+xrandr --output HDMI-1 --primary --mode 1920x1080 --pos 0x0 >/dev/null 2>&1 || true
+
 # Bildschirmschoner/Abschaltung aus
 xset s off 2>/dev/null || true
 xset -dpms 2>/dev/null || true
@@ -143,6 +150,8 @@ unclutter -idle 2 -root >/dev/null 2>&1 &
 
 exec chromium-browser \
     --kiosk \
+    --window-position=0,0 \
+    --window-size=1920,1080 \
     --noerrdialogs \
     --disable-infobars \
     --disable-session-crashed-bubble \
