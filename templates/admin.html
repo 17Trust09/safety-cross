@@ -101,4 +101,22 @@
     </form>
   </div>
 </div>
+
+<script>
+  // Auto-Logout + Rückkehr zur Anzeige nach 60 s Inaktivität
+  (function () {
+    var IDLE_MS = 60000;
+    var timer;
+    function reset() {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        window.location.href = "{{ url_for('logout') }}?next=/";
+      }, IDLE_MS);
+    }
+    ["mousemove", "mousedown", "keydown", "touchstart", "click", "scroll", "wheel"].forEach(function (evt) {
+      document.addEventListener(evt, reset, true);
+    });
+    reset();
+  })();
+</script>
 {% endblock %}

@@ -38,9 +38,9 @@ log "System aktualisieren + Pakete installieren (braucht Internet)"
 apt-get update -y
 apt-get install -y --no-install-recommends \
     python3 python3-venv python3-pip \
-    chromium chromium-browser unclutter i2c-tools 2>/dev/null \
+    chromium chromium-browser unclutter-xfixes i2c-tools xorg openbox 2>/dev/null \
     || apt-get install -y --no-install-recommends \
-        python3 python3-venv python3-pip chromium-browser unclutter i2c-tools
+        python3 python3-venv python3-pip chromium-browser unclutter-xfixes i2c-tools xorg openbox
 ok "Pakete installiert"
 
 # ---------------------------------------------------------------- Uhr (RTC / fake-hwclock)
@@ -67,10 +67,65 @@ fi
 timedatectl set-timezone Europe/Berlin 2>/dev/null || true
 ok "Uhr konfiguriert"
 
-# ---------------------------------------------------------------- Desktop-Autologin (für X/Kiosk)
-log "Desktop-Autologin aktivieren (X für den Kiosk)"
-raspi-config nonint do_boot_behaviour B4 2>/dev/null || true
-ok "Autologin gesetzt"
+# ---------------------------------------------------------------- Desktop/Kiosk (X11 + Openbox)
+log "X11 + Openbox erzwingen (unclutter/xset/xrandr brauchen X11)"
+
+# LightDM-Autologin in die Openbox-Session (statt Wayland)
+mkdir -p /etc/lightdm/lightdm.conf.d
+cat > /etc/lightdm/lightdm.conf.d/50-safetycross-autologin.conf <<EOF
+[Seat:*]
+autologin-user=$USER
+autologin-user-timeout=0
+user-session=openbox
+autologin-session=openbox
+EOF
+
+# Wayland-Sessions deaktivieren -> X11 (sonst funktionieren unclutter/xset/xrandr nicht)
+if [ -d /usr/share/wayland-sessions ]; then
+    mkdir -p /usr/share/wayland-sessions/disabled
+    for f in /usr/share/wayland-sessions/*.desktop; do
+        [ -f "$f" ] && mv "$f" /usr/share/wayland-sessions/disabled/ 2>/dev/null || true
+    done
+    log "  Wayland-Sessions deaktiviert"
+fi
+
+# Openbox: unsichtbarer Cursor + Kiosk-Fenster ohne Dekor, maximiert
+mkdir -p "/home/$USER/.config/openbox"
+cat > "/home/$USER/.config/openbox/rc.xml" <<'XEOF'
+<?xml version="1.0"?>
+<openbox_config>
+  <mouse><theme><name>X_cursor</name></theme></mouse>
+  <applications>
+    <application class="safety-cross-kiosk"><decor>no</decor><maximized>yes</maximized></application>
+  </applications>
+</openbox_config>
+XEOF
+
+# Transparentes Cursor-Theme (Maus komplett unsichtbar)
+mkdir -p "/home/$USER/.icons/Transparent/cursors" "/home/$USER/.icons/default"
+cat > "/home/$USER/.icons/Transparent/cursor.theme" <<'XEOF'
+[Icon Theme]
+Name=Transparent
+Inherits=Transparent
+XEOF
+for c in default left_ptr arrow hand hand1 hand2 text wait watch crosshair move pointer X_cursor; do
+    touch "/home/$USER/.icons/Transparent/cursors/$c"
+done
+cat > "/home/$USER/.icons/default/index.theme" <<'XEOF'
+[Icon Theme]
+Name=Default
+Inherits=Transparent
+XEOF
+
+# Chromium-Policy: Übersetzer komplett deaktivieren
+mkdir -p /etc/chromium/policies/managed
+cat > /etc/chromium/policies/managed/safetycross-translate-off.json <<'XEOF'
+{"TranslateEnabled": false}
+XEOF
+
+chown -R "$USER":"$USER" "/home/$USER/.config/openbox" "/home/$USER/.icons"
+systemctl set-default graphical.target
+ok "X11 + Openbox + Cursor-Ausblenden + Translate-Off konfiguriert"
 
 # ---------------------------------------------------------------- App installieren
 log "App nach $APP_DIR installieren"
@@ -146,11 +201,12 @@ xset s off 2>/dev/null || true
 xset -dpms 2>/dev/null || true
 xset s noblank 2>/dev/null || true
 
-# Maus-Auto-Hide (nach 2 s Inaktivität, zeigt sich bei Bewegung)
-unclutter -idle 2 -root >/dev/null 2>&1 &
+# Maus-Auto-Hide (sofort ausblenden, erscheint bei Bewegung kurz)
+unclutter -idle 0 -root >/dev/null 2>&1 &
 
 exec chromium-browser \
     --kiosk \
+    --class=safety-cross-kiosk \
     --window-position=0,0 \
     --window-size=1920,1080 \
     --noerrdialogs \
@@ -159,7 +215,8 @@ exec chromium-browser \
     --no-first-run \
     --check-for-update-interval=31536000 \
     --disable-translate \
-    --disable-features=TranslateUI \
+    --disable-features=Translate,TranslateUI \
+    --force-fieldtrials="*Translate/Disabled/" \
     --autoplay-policy=no-user-gesture-required \
     --app="$APP_URL" >> "$LOG" 2>&1
 EOF
@@ -201,6 +258,8 @@ Type=simple
 User=$USER
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/$USER/.Xauthority
+Environment=XCURSOR_THEME=Transparent
+Environment=XCURSOR_SIZE=1
 ExecStartPre=/bin/sleep 5
 ExecStart=$APP_DIR/start_kiosk.sh
 Restart=on-failure

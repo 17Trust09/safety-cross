@@ -147,6 +147,10 @@ def login():
 @app.route("/logout")
 def logout():
     session.pop("logged_in", None)
+    nxt = request.args.get("next", "")
+    # nur interne relative Pfade erlauben (Schutz vor Open Redirect)
+    if nxt.startswith("/") and not nxt.startswith("//"):
+        return redirect(nxt)
     return redirect(url_for("login"))
 
 
