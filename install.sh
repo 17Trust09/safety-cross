@@ -5,8 +5,8 @@
 #   sudo bash install.sh
 #
 # Richtet ein: Python-venv + Flask-App, SQLite-DB (admin/admin),
-# Hardware-Lizenz (Pi-Seriennummer + HMAC), Kiosk (Chromium fullscreen),
-# Maus-Auto-Hide (unclutter) und die Uhr:
+# Hardware-Lizenz (Pi-Seriennummer + HMAC), Kiosk (Chromium fullscreen,
+# Mauszeiger via CSS ausgeblendet) und die Uhr:
 #   - DS3231-RTC, WENN vorhanden (echte Hardware-Uhr, offline korrekt)
 #   - sonst fake-hwclock (Zeit übersteht Reboot/Stromausfall bestmöglich)
 #
@@ -38,9 +38,9 @@ log "System aktualisieren + Pakete installieren (braucht Internet)"
 apt-get update -y
 apt-get install -y --no-install-recommends \
     python3 python3-venv python3-pip \
-    chromium chromium-browser unclutter-xfixes i2c-tools xorg openbox 2>/dev/null \
+    chromium chromium-browser i2c-tools 2>/dev/null \
     || apt-get install -y --no-install-recommends \
-        python3 python3-venv python3-pip chromium-browser unclutter-xfixes i2c-tools xorg openbox
+        python3 python3-venv python3-pip chromium-browser i2c-tools
 ok "Pakete installiert"
 
 # ---------------------------------------------------------------- Uhr (RTC / fake-hwclock)
@@ -67,38 +67,20 @@ fi
 timedatectl set-timezone Europe/Berlin 2>/dev/null || true
 ok "Uhr konfiguriert"
 
-# ---------------------------------------------------------------- Desktop/Kiosk (X11 + Openbox)
-log "X11 + Openbox erzwingen (unclutter/xset/xrandr brauchen X11)"
+# ---------------------------------------------------------------- Desktop-Autologin (Kiosk)
+log "Desktop-Autologin aktivieren (Standard-Session, kein X11-Zwang)"
 
-# LightDM-Autologin in die Openbox-Session (statt Wayland)
-mkdir -p /etc/lightdm/lightdm.conf.d
-cat > /etc/lightdm/lightdm.conf.d/50-safetycross-autologin.conf <<EOF
-[Seat:*]
-autologin-user=$USER
-autologin-user-timeout=0
-user-session=openbox
-autologin-session=openbox
-EOF
-
-# Wayland-Sessions deaktivieren -> X11 (sonst funktionieren unclutter/xset/xrandr nicht)
-if [ -d /usr/share/wayland-sessions ]; then
-    mkdir -p /usr/share/wayland-sessions/disabled
-    for f in /usr/share/wayland-sessions/*.desktop; do
-        [ -f "$f" ] && mv "$f" /usr/share/wayland-sessions/disabled/ 2>/dev/null || true
+# Aufräumen: evtl. alte X11/Openbox-Konfiguration einer früheren Version entfernen
+rm -f /etc/lightdm/lightdm.conf.d/50-safetycross-autologin.conf
+if [ -d /usr/share/wayland-sessions/disabled ]; then
+    for f in /usr/share/wayland-sessions/disabled/*.desktop; do
+        [ -f "$f" ] && mv "$f" /usr/share/wayland-sessions/ 2>/dev/null || true
     done
-    log "  Wayland-Sessions deaktiviert"
+    rmdir /usr/share/wayland-sessions/disabled 2>/dev/null || true
 fi
 
-# Openbox: Kiosk-Fenster ohne Dekor, maximiert
-mkdir -p "/home/$USER/.config/openbox"
-cat > "/home/$USER/.config/openbox/rc.xml" <<'XEOF'
-<?xml version="1.0"?>
-<openbox_config>
-  <applications>
-    <application class="safety-cross-kiosk"><decor>no</decor><maximized>yes</maximized></application>
-  </applications>
-</openbox_config>
-XEOF
+raspi-config nonint do_boot_behaviour B4 2>/dev/null || true
+raspi-config nonint do_blanking 0 2>/dev/null || true
 
 # Chromium-Policy: Übersetzer komplett deaktivieren
 mkdir -p /etc/chromium/policies/managed
@@ -112,9 +94,8 @@ apt-get install -y --no-install-recommends zram-tools 2>/dev/null || true
 systemctl enable zramswap 2>/dev/null || true
 systemctl restart zramswap 2>/dev/null || true
 
-chown -R "$USER":"$USER" "/home/$USER/.config/openbox"
 systemctl set-default graphical.target
-ok "X11 + Openbox + zram + Translate-Off konfiguriert"
+ok "Autologin + Screen-Blanking-Off + zram + Translate-Off konfiguriert"
 
 # ---------------------------------------------------------------- App installieren
 log "App nach $APP_DIR installieren"
@@ -182,14 +163,7 @@ for i in $(seq 1 30); do
     sleep 2
 done
 
-# Feste Auflösung: Full-HD 1920x1080 (wie LHTPi/Terminboard)
-xrandr --output HDMI-1 --primary --mode 1920x1080 --pos 0x0 >/dev/null 2>&1 || true
-
-# Bildschirmschoner/Abschaltung aus
-xset s off 2>/dev/null || true
-xset -dpms 2>/dev/null || true
-xset s noblank 2>/dev/null || true
-
+# (Auflösung kommt über config.txt hdmi_mode=82; Screen-Blanking via raspi-config do_blanking)
 exec chromium-browser \
     --kiosk \
     --class=safety-cross-kiosk \
@@ -207,7 +181,6 @@ exec chromium-browser \
     --disable-dev-shm-usage \
     --renderer-process-limit=1 \
     --enable-gpu-rasterization \
-    --ignore-gpu-blocklist \
     --app="$APP_URL" >> "$LOG" 2>&1
 EOF
 chmod +x "$APP_DIR/start_kiosk.sh"
