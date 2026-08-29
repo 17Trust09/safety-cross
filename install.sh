@@ -89,32 +89,15 @@ if [ -d /usr/share/wayland-sessions ]; then
     log "  Wayland-Sessions deaktiviert"
 fi
 
-# Openbox: unsichtbarer Cursor + Kiosk-Fenster ohne Dekor, maximiert
+# Openbox: Kiosk-Fenster ohne Dekor, maximiert
 mkdir -p "/home/$USER/.config/openbox"
 cat > "/home/$USER/.config/openbox/rc.xml" <<'XEOF'
 <?xml version="1.0"?>
 <openbox_config>
-  <mouse><theme><name>X_cursor</name></theme></mouse>
   <applications>
     <application class="safety-cross-kiosk"><decor>no</decor><maximized>yes</maximized></application>
   </applications>
 </openbox_config>
-XEOF
-
-# Transparentes Cursor-Theme (Maus komplett unsichtbar)
-mkdir -p "/home/$USER/.icons/Transparent/cursors" "/home/$USER/.icons/default"
-cat > "/home/$USER/.icons/Transparent/cursor.theme" <<'XEOF'
-[Icon Theme]
-Name=Transparent
-Inherits=Transparent
-XEOF
-for c in default left_ptr arrow hand hand1 hand2 text wait watch crosshair move pointer X_cursor; do
-    touch "/home/$USER/.icons/Transparent/cursors/$c"
-done
-cat > "/home/$USER/.icons/default/index.theme" <<'XEOF'
-[Icon Theme]
-Name=Default
-Inherits=Transparent
 XEOF
 
 # Chromium-Policy: Übersetzer komplett deaktivieren
@@ -123,9 +106,15 @@ cat > /etc/chromium/policies/managed/safetycross-translate-off.json <<'XEOF'
 {"TranslateEnabled": false}
 XEOF
 
-chown -R "$USER":"$USER" "/home/$USER/.config/openbox" "/home/$USER/.icons"
+# zram-Swap: komprimierter RAM-Swap statt SD-Karten-Swapping
+# (wichtig auf dem 1-GB-Pi 3 B — verhindert Ruckeln durch langsames SD-Swap)
+apt-get install -y --no-install-recommends zram-tools 2>/dev/null || true
+systemctl enable zramswap 2>/dev/null || true
+systemctl restart zramswap 2>/dev/null || true
+
+chown -R "$USER":"$USER" "/home/$USER/.config/openbox"
 systemctl set-default graphical.target
-ok "X11 + Openbox + Cursor-Ausblenden + Translate-Off konfiguriert"
+ok "X11 + Openbox + zram + Translate-Off konfiguriert"
 
 # ---------------------------------------------------------------- App installieren
 log "App nach $APP_DIR installieren"
@@ -201,9 +190,6 @@ xset s off 2>/dev/null || true
 xset -dpms 2>/dev/null || true
 xset s noblank 2>/dev/null || true
 
-# Maus-Auto-Hide (sofort ausblenden, erscheint bei Bewegung kurz)
-unclutter -idle 0 -root >/dev/null 2>&1 &
-
 exec chromium-browser \
     --kiosk \
     --class=safety-cross-kiosk \
@@ -218,6 +204,10 @@ exec chromium-browser \
     --disable-features=Translate,TranslateUI \
     --force-fieldtrials="*Translate/Disabled/" \
     --autoplay-policy=no-user-gesture-required \
+    --disable-dev-shm-usage \
+    --renderer-process-limit=1 \
+    --enable-gpu-rasterization \
+    --ignore-gpu-blocklist \
     --app="$APP_URL" >> "$LOG" 2>&1
 EOF
 chmod +x "$APP_DIR/start_kiosk.sh"
@@ -258,8 +248,6 @@ Type=simple
 User=$USER
 Environment=DISPLAY=:0
 Environment=XAUTHORITY=/home/$USER/.Xauthority
-Environment=XCURSOR_THEME=Transparent
-Environment=XCURSOR_SIZE=1
 ExecStartPre=/bin/sleep 5
 ExecStart=$APP_DIR/start_kiosk.sh
 Restart=on-failure

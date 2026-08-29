@@ -327,3 +327,6 @@ a.tab{text-decoration:none}
 .legend{font-size:20px;gap:30px;margin-top:18px}
 .legend .dot{width:21px;height:21px}
 
+/* Kiosk-Anzeige: Mauszeiger komplett ausblenden (zuverlässig via CSS, unabhängig von X11/Wayland) */
+.kiosk-mode *{cursor:none !important}
+
