@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Safety Cross – Ein-Run-Setup für Raspberry Pi (32-bit Raspberry Pi OS Desktop)
+# Safety Cross – Ein-Run-Setup für Raspberry Pi (Raspberry Pi OS Desktop, 32-/64-bit)
 #
 #   sudo bash install.sh
 #
