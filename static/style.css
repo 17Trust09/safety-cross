@@ -330,3 +330,6 @@ a.tab{text-decoration:none}
 /* Kiosk-Anzeige: Mauszeiger komplett ausblenden (zuverlässig via CSS, unabhängig von X11/Wayland) */
 .kiosk-mode *{cursor:none !important}
 
+/* Admin/Login: Cursor nach Inaktivität ausblenden (wird per JS getoggelt) */
+.hide-cursor *{cursor:none !important}
+

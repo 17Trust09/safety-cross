@@ -103,20 +103,21 @@
 </div>
 
 <script>
-  // Auto-Logout + Rückkehr zur Anzeige nach 60 s Inaktivität
+  // Cursor nach 30 s Inaktivität ausblenden; Auto-Logout + Rückkehr zur Anzeige nach 60 s
   (function () {
-    var IDLE_MS = 60000;
-    var timer;
-    function reset() {
-      clearTimeout(timer);
-      timer = setTimeout(function () {
-        window.location.href = "{{ url_for('logout') }}?next=/";
-      }, IDLE_MS);
+    var HIDE_MS = 30000, LOGOUT_MS = 60000;
+    var hideTimer, logoutTimer;
+    function activity() {
+      document.body.classList.remove("hide-cursor");
+      clearTimeout(hideTimer);
+      clearTimeout(logoutTimer);
+      hideTimer = setTimeout(function () { document.body.classList.add("hide-cursor"); }, HIDE_MS);
+      logoutTimer = setTimeout(function () { window.location.href = "{{ url_for('logout') }}?next=/"; }, LOGOUT_MS);
     }
     ["mousemove", "mousedown", "keydown", "touchstart", "click", "scroll", "wheel"].forEach(function (evt) {
-      document.addEventListener(evt, reset, true);
+      document.addEventListener(evt, activity, true);
     });
-    reset();
+    activity();
   })();
 </script>
 {% endblock %}
