@@ -125,6 +125,7 @@ def board():
         "abteilung": db.get_config("abteilung") or "",
         "meister": db.get_config("meister") or "",
         "ersthelfer": db.list_ersthelfer(),
+        "notruf": db.list_notruf(),
         "safe_days": db.count_safe_days(),
         "today_str": "%s, %d. %s %d" % (WEEKDAYS_DE[t.weekday()], t.day, MONTHS_DE[t.month - 1], t.year),
     })
@@ -162,6 +163,7 @@ def admin():
         "abteilung": db.get_config("abteilung") or "",
         "meister": db.get_config("meister") or "",
         "ersthelfer": db.list_ersthelfer(),
+        "notruf": db.list_notruf(),
         "safe_days": db.count_safe_days(),
         "start_date": start_date or "",
         "start_date_de": _format_de(start_date) if start_date else "",
@@ -201,6 +203,26 @@ def admin_ersthelfer_add():
 def admin_ersthelfer_remove():
     try:
         db.remove_ersthelfer(int(request.form.get("id", "")))
+    except (TypeError, ValueError):
+        pass
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/notruf-add", methods=["POST"])
+@auth.login_required
+def admin_notruf_add():
+    label = request.form.get("label", "").strip()
+    value = request.form.get("value", "").strip()
+    if label and value:
+        db.add_notruf(label, value)
+    return redirect(url_for("admin"))
+
+
+@app.route("/admin/notruf-remove", methods=["POST"])
+@auth.login_required
+def admin_notruf_remove():
+    try:
+        db.remove_notruf(int(request.form.get("id", "")))
     except (TypeError, ValueError):
         pass
     return redirect(url_for("admin"))

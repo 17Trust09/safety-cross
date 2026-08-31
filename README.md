@@ -4,10 +4,11 @@ Digitale Anzeigetafel (Safety Cross) für Arbeitssicherheit — ein **offline-f�
 Raspberry-Pi-Kiosk** mit Web-Admin.
 
 - **Anzeige:** Monats-Kreuz (Plus-Form), vergangene/heutige Tage grün/gelb/rot,
-  zukünftige Tage weiß, „Tage unfallfrei“-Zähler, Ersthelfer, Abteilung + Meister.
-- **Admin** (passwortgeschützt): Abteilung, Meister, Ersthelfer, Zählung
-  (Tage ODER Startdatum), Unfall-Meldung (Datum · Typ · Person · Beschreibung),
-  Historie (Monate blättern), System (Neustart/Herunterfahren).
+  zukünftige Tage weiß, „Tage unfallfrei“-Zähler, Ersthelfer, Abteilung + Meister,
+  Notruf & wichtige Nummern.
+- **Admin** (passwortgeschützt): Abteilung, Meister, Ersthelfer, Notruf & wichtige
+  Nummern, Zählung (Tage ODER Startdatum), Unfall-Meldung (Datum · Typ · Person ·
+  Beschreibung), Historie (Monate blättern), System (Neustart/Herunterfahren).
 - **Lizenz:** hardware-gebunden (Pi-Seriennummer + HMAC) → nicht trivial kopierbar.
 
 ## Installation
@@ -22,8 +23,9 @@ sudo reboot
 ```
 
 `install.sh` richtet ein: venv + Flask-App, SQLite-DB (Login `admin`/`admin`),
-Lizenz-Key, Chromium-Kiosk (Fullscreen), Maus-Auto-Hide (`unclutter`) und die Uhr:
-**DS3231-RTC, falls vorhanden, sonst `fake-hwclock`** (Zeit übersteht Reboot/Stromausfall).
+Lizenz-Key, Chromium-Kiosk (Fullscreen), Maus-Auto-Hide (via CSS), die Uhr
+(**DS3231-RTC, falls vorhanden, sonst `fake-hwclock`**) und deaktiviert das
+Bildschirm-Abschalten (Idle/DPMS) für eine Daueranzeige.
 
 ## Lokal entwickeln
 
@@ -44,7 +46,7 @@ venv/bin/python -m pytest tests/ -q
 
 ```
 app.py        Flask-App + Routen
-db.py         SQLite-Datenschicht (config, ersthelfer, days)
+db.py         SQLite-Datenschicht (config, ersthelfer, notruf, days)
 auth.py       Passwort-Hash + Login-Schutz
 license.py    Hardware-Lizenz (Seriennummer + HMAC)
 templates/    board.html · login.html · admin.html · locked.html

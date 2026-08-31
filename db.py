@@ -34,6 +34,12 @@ def init_db():
             status TEXT NOT NULL,          -- green | yellow | red
             note   TEXT
         );
+        CREATE TABLE IF NOT EXISTS notruf (
+            id    INTEGER PRIMARY KEY AUTOINCREMENT,
+            label TEXT NOT NULL,
+            value TEXT NOT NULL,
+            sort  INTEGER DEFAULT 0
+        );
         """
     )
     # Defaults (nur wenn noch nicht gesetzt)
@@ -82,6 +88,29 @@ def add_ersthelfer(name):
 def remove_ersthelfer(ersthelfer_id):
     conn = _conn()
     conn.execute("DELETE FROM ersthelfer WHERE id = ?", (ersthelfer_id,))
+    conn.commit()
+    conn.close()
+
+
+# ---------- Notruf / wichtige Nummern ----------
+
+def list_notruf():
+    conn = _conn()
+    rows = conn.execute("SELECT id, label, value FROM notruf ORDER BY sort, id").fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def add_notruf(label, value):
+    conn = _conn()
+    conn.execute("INSERT INTO notruf (label, value) VALUES (?, ?)", (label, value))
+    conn.commit()
+    conn.close()
+
+
+def remove_notruf(notruf_id):
+    conn = _conn()
+    conn.execute("DELETE FROM notruf WHERE id = ?", (notruf_id,))
     conn.commit()
     conn.close()
 

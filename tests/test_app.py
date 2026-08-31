@@ -99,3 +99,25 @@ def test_unfall_flow_and_counter_reset():
         follow_redirects=True,
     )
     assert db.count_safe_days() == 0  # Unfall heute -> 0
+
+
+def test_notruf_crud():
+    db.add_notruf("Feuerwehr", "112")
+    db.add_notruf("Werkschutz", "040 123")
+    rows = db.list_notruf()
+    assert len(rows) == 2
+    assert rows[0]["label"] == "Feuerwehr"
+    assert rows[0]["value"] == "112"
+    db.remove_notruf(rows[0]["id"])
+    assert len(db.list_notruf()) == 1
+
+
+def test_notruf_admin_and_board():
+    client = app.test_client()
+    client.post("/login", data={"password": "admin"})
+    client.post("/admin/notruf-add", data={"label": "Feuerwehr", "value": "112"}, follow_redirects=True)
+    assert any(n["label"] == "Feuerwehr" for n in db.list_notruf())
+    r = client.get("/")
+    html = r.get_data(as_text=True)
+    assert "Feuerwehr" in html
+    assert "112" in html

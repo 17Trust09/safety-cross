@@ -37,6 +37,26 @@
   </div>
 
   <div class="card">
+    <h3><span class="ico">☎</span> Notruf &amp; wichtige Nummern</h3>
+    <p class="hint" style="margin:0 0 12px">Nummer oder Ort eintragen — z. B. „Feuerwehr → 112" oder „Defibrillator → Halle 2, EG".</p>
+    <form method="post" action="{{ url_for('admin_notruf_add') }}" class="field">
+      <input type="text" name="label" placeholder="Bezeichnung (z. B. Feuerwehr)" style="flex:0 0 200px;min-width:160px">
+      <input type="text" name="value" placeholder="Nummer / Ort (z. B. 112)">
+      <button class="btn yellow" type="submit">Hinzufügen</button>
+    </form>
+    <div class="chips">
+      {% for n in notruf %}
+      <span class="chip">{{ n.label }}: {{ n.value }}
+        <form method="post" action="{{ url_for('admin_notruf_remove') }}" style="display:inline">
+          <input type="hidden" name="id" value="{{ n.id }}">
+          <button type="submit" title="Entfernen">×</button>
+        </form>
+      </span>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="card">
     <h3><span class="ico">▶</span> Tage unfallfrei / Zählung</h3>
     <p class="hint" style="margin:0 0 12px">Entweder die Anzahl der unfallfreien Tage eintragen (Startdatum wird automatisch berechnet) — oder direkt ein Startdatum setzen.</p>
     <form method="post" action="{{ url_for('admin_zahlung_days') }}" class="field">

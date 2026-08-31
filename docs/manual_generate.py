@@ -157,7 +157,7 @@ def cover(pdf):
              new_x="LMARGIN", new_y="NEXT")
     pdf.set_font("D", "", 8.5)
     pdf.set_text_color(150, 158, 185)
-    pdf.cell(0, 6, "Stand: August 2026  ·  v1.0", align="C",
+    pdf.cell(0, 6, "Stand: August 2026  ·  v1.1", align="C",
              new_x="LMARGIN", new_y="NEXT")
     pdf._cover = False
 
@@ -191,7 +191,7 @@ def build():
         "Die Anzeige gliedert sich in drei Bereiche:"
     )
     pdf.bullet("Hauptbereich: das Monats-Kreuz mit den farbigen Tagen.")
-    pdf.bullet("Linke Seite: Abteilung, Meister und die Ersthelfer.")
+    pdf.bullet("Linke Seite: Abteilung, Meister, die Ersthelfer und Notrufnummern.")
     pdf.bullet("Rechts oben: der große Zähler „Tage unfallfrei“.")
     pdf.ln(1)
     pdf.shot(
@@ -220,9 +220,9 @@ def build():
 
     pdf.section("Die Verwaltung")
     pdf.body(
-        "Nach der Anmeldung erscheint die Verwaltung mit sechs Karten: "
-        "Abteilung & Meister, Ersthelfer, Tage unfallfrei / Zählung, Unfall melden, "
-        "System und Passwort ändern."
+        "Nach der Anmeldung erscheint die Verwaltung mit sieben Karten: "
+        "Abteilung & Meister, Ersthelfer, Notruf & wichtige Nummern, "
+        "Tage unfallfrei / Zählung, Unfall melden, System und Passwort ändern."
     )
     pdf.shot(
         "/opt/data/projects/safety-cross/docs/screenshots/admin.png",
@@ -238,6 +238,11 @@ def build():
 
     pdf.section("Ersthelfer verwalten")
     pdf.bullet("Name eintippen und mit „Hinzufügen“ übernehmen.")
+    pdf.bullet("Entfernen: auf das rote ✕ am jeweiligen Eintrag klicken.")
+
+    pdf.section("Notruf & wichtige Nummern verwalten")
+    pdf.bullet("Bezeichnung (z. B. „Feuerwehr“) und Nummer bzw. Ort (z. B. „112“) eintragen.")
+    pdf.bullet("Mit „Hinzufügen“ übernehmen – die Nummern erscheinen auf der Anzeige.")
     pdf.bullet("Entfernen: auf das rote ✕ am jeweiligen Eintrag klicken.")
 
     pdf.section("Tage unfallfrei / Zählung einstellen")

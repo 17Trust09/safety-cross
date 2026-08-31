@@ -23,9 +23,19 @@
       <h2><span class="cross">✚</span> Ersthelfer</h2>
       <ul>
         {% for e in ersthelfer %}
-        <li><span class="avatar">{{ e.name[:2]|upper }}</span><span>{{ e.name }}</span><span class="role">Ersthelfer</span></li>
+        <li><span class="avatar">{{ e.name[:2]|upper }}</span><span>{{ e.name }}</span></li>
         {% else %}
         <li class="empty-note">Noch keine Ersthelfer hinterlegt.</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="notruf">
+      <h2><span class="cross">☎&#xFE0E;</span> Notruf &amp; wichtige Nummern</h2>
+      <ul>
+        {% for n in notruf %}
+        <li><span class="n-label">{{ n.label }}</span><span class="n-value">{{ n.value }}</span></li>
+        {% else %}
+        <li class="empty-note">Noch keine Nummern hinterlegt.</li>
         {% endfor %}
       </ul>
     </div>
