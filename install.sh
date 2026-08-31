@@ -39,9 +39,9 @@ log "System aktualisieren + Pakete installieren (braucht Internet)"
 apt-get update -y
 apt-get install -y --no-install-recommends \
     python3 python3-venv python3-pip \
-    chromium chromium-browser i2c-tools 2>/dev/null \
+    chromium chromium-browser i2c-tools util-linux-extra 2>/dev/null \
     || apt-get install -y --no-install-recommends \
-        python3 python3-venv python3-pip chromium-browser i2c-tools
+        python3 python3-venv python3-pip chromium-browser i2c-tools util-linux-extra
 ok "Pakete installiert"
 
 # ---------------------------------------------------------------- Uhr (RTC / fake-hwclock)
@@ -55,7 +55,7 @@ append_line "$CONFIG" "hdmi_group=2"
 append_line "$CONFIG" "hdmi_mode=82"
 
 modprobe i2c-dev 2>/dev/null || true
-if i2cdetect -y 1 2>/dev/null | grep -qiE "68"; then
+if i2cdetect -y 1 2>/dev/null | grep -qiE "68|UU"; then
     ok "DS3231-RTC erkannt -> nutze Hardware-Uhr, deaktiviere fake-hwclock"
     systemctl disable fake-hwclock 2>/dev/null || true
     systemctl stop fake-hwclock 2>/dev/null || true
