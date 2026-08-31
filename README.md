@@ -23,8 +23,8 @@ sudo reboot
 ```
 
 `install.sh` richtet ein: venv + Flask-App, SQLite-DB (Login `admin`/`admin`),
-Lizenz-Key, Chromium-Kiosk (Fullscreen), Maus-Auto-Hide (via CSS), die Uhr
-(**DS3231-RTC, falls vorhanden, sonst `fake-hwclock`**) und deaktiviert das
+Lizenz-Key, Chromium-Kiosk (Fullscreen, dauerhaft 200 % Zoom), Maus-Auto-Hide (via CSS),
+die Uhr (**DS3231-RTC, falls vorhanden, sonst `fake-hwclock`**) und deaktiviert das
 Bildschirm-Abschalten (Idle/DPMS) für eine Daueranzeige.
 
 ## Lokal entwickeln

@@ -244,6 +244,7 @@ exec chromium-browser \
     --disable-dev-shm-usage \
     --renderer-process-limit=1 \
     --enable-gpu-rasterization \
+    --force-device-scale-factor=2.0 \
     --app="$APP_URL" >> "$LOG" 2>&1
 EOF
 chmod +x "$APP_DIR/start_kiosk.sh"
