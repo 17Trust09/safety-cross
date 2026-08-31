@@ -81,7 +81,8 @@ if [ -d /usr/share/wayland-sessions/disabled ]; then
 fi
 
 raspi-config nonint do_boot_behaviour B4 2>/dev/null || true
-raspi-config nonint do_blanking 0 2>/dev/null || true
+# do_blanking 1 = Screen-Blanking AUS (Konsolen-Blanking + Xorg-DPMS deaktivieren; 0 würde es aktivieren)
+raspi-config nonint do_blanking 1 2>/dev/null || true
 
 # Chromium-Policy: Übersetzer komplett deaktivieren
 mkdir -p /etc/chromium/policies/managed
@@ -300,6 +301,22 @@ systemctl enable safety-cross.service
 systemctl enable safety-cross-kiosk.service
 systemctl restart safety-cross.service
 ok "Services aktiviert + App gestartet"
+
+# ---------------------------------------------------------------- Passwordless sudo (Admin: Neustart/Herunterfahren)
+log "Passwordless sudo für shutdown/reboot einrichten"
+SUDOERS_FILE=/etc/sudoers.d/10-safety-cross
+cat > "$SUDOERS_FILE" <<EOF
+# Safety Cross: Neustart/Herunterfahren ohne Passwort aus der Admin-Oberfläche
+$USER ALL=(ALL) NOPASSWD: /sbin/shutdown, /sbin/reboot, /sbin/poweroff, /sbin/halt, /usr/sbin/shutdown, /usr/sbin/reboot, /usr/sbin/poweroff, /usr/sbin/halt
+EOF
+chown root:root "$SUDOERS_FILE"
+chmod 440 "$SUDOERS_FILE"
+if visudo -c -f "$SUDOERS_FILE" >/dev/null 2>&1; then
+    ok "Passwordless sudo für shutdown/reboot eingerichtet"
+else
+    warn "sudoers-Datei ungültig -> entferne sie wieder (kein Schaden)"
+    rm -f "$SUDOERS_FILE"
+fi
 
 # ---------------------------------------------------------------- Fertig
 echo

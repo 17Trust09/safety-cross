@@ -306,6 +306,7 @@
   }
 
 a.tab{text-decoration:none}
+a.btn{text-decoration:none}
 .field input[type=number]{flex:1;min-width:140px;padding:12px 14px;font-size:15px;border:1.5px solid var(--line);border-radius:10px;background:#fff;color:var(--ink)}
 .field input[type=number]:focus{outline:none;border-color:var(--navy-2)}
 .month-nav{display:inline-block;color:var(--navy);font-weight:800;font-size:22px;text-decoration:none;padding:0 10px;cursor:pointer}
@@ -348,5 +349,5 @@ a.tab{text-decoration:none}
 .legend .dot{width:21px;height:21px}
 
 /* Cursor nach Inaktivität ausblenden (wird per JS getoggelt, funktioniert auf Wayland) */
-.hide-cursor *{cursor:none !important}
+body.hide-cursor, body.hide-cursor *{cursor:none !important}
 

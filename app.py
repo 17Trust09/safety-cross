@@ -282,14 +282,14 @@ def admin_password():
 @app.route("/admin/reboot", methods=["POST"])
 @auth.login_required
 def admin_reboot():
-    subprocess.run(["sudo", "reboot"], capture_output=True)
+    subprocess.run(["sudo", "-n", "reboot"], capture_output=True)
     return redirect(url_for("admin"))
 
 
 @app.route("/admin/shutdown", methods=["POST"])
 @auth.login_required
 def admin_shutdown():
-    subprocess.run(["sudo", "shutdown", "-h", "now"], capture_output=True)
+    subprocess.run(["sudo", "-n", "shutdown", "-h", "now"], capture_output=True)
     return redirect(url_for("admin"))
 
 

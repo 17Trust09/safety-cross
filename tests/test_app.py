@@ -121,3 +121,12 @@ def test_notruf_admin_and_board():
     html = r.get_data(as_text=True)
     assert "Feuerwehr" in html
     assert "112" in html
+
+
+def test_logout_protects_admin():
+    client = app.test_client()
+    client.post("/login", data={"password": "admin"})
+    assert client.get("/admin").status_code == 200
+    client.get("/logout")
+    # Nach dem Logout ist der Admin-Bereich wieder geschützt (Redirect zum Login)
+    assert client.get("/admin").status_code == 302
