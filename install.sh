@@ -55,7 +55,9 @@ append_line "$CONFIG" "hdmi_group=2"
 append_line "$CONFIG" "hdmi_mode=82"
 
 modprobe i2c-dev 2>/dev/null || true
-if i2cdetect -y 1 2>/dev/null | grep -qiE "68|UU"; then
+# Robust: /dev/rtc0 existiert nur, wenn eine RTC (DS3231) aktiv ist. i2cdetect ist nur
+# Fallback für den Zustand VOR dem ersten Reboot (Treiber noch nicht geladen -> "68"/"UU").
+if [ -e /dev/rtc0 ] || i2cdetect -y 1 2>/dev/null | grep -qiE "68|UU"; then
     ok "DS3231-RTC erkannt -> nutze Hardware-Uhr, deaktiviere fake-hwclock"
     systemctl disable fake-hwclock 2>/dev/null || true
     systemctl stop fake-hwclock 2>/dev/null || true
