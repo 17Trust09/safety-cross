@@ -6,9 +6,10 @@
 #
 # Richtet ein: Python-venv + Flask-App, SQLite-DB (admin/admin),
 # Hardware-Lizenz (Pi-Seriennummer + HMAC), Kiosk (Chromium fullscreen,
-# Mauszeiger via CSS ausgeblendet) und die Uhr:
+# Mauszeiger via CSS ausgeblendet), die Uhr und das Screen-Blanking:
 #   - DS3231-RTC, WENN vorhanden (echte Hardware-Uhr, offline korrekt)
 #   - sonst fake-hwclock (Zeit übersteht Reboot/Stromausfall bestmöglich)
+#   - Bildschirm-Abschalten (Idle/DPMS) aus -> Daueranzeige (Wayfire + labwc + X11)
 #
 # Idempotent: kann gefahrlos mehrfach laufen.
 #
@@ -96,6 +97,67 @@ systemctl restart zramswap 2>/dev/null || true
 
 systemctl set-default graphical.target
 ok "Autologin + Screen-Blanking-Off + zram + Translate-Off konfiguriert"
+
+# ---------------------------------------------------------------- Screen-Blanking deaktivieren
+log "Bildschirm-Abschalten deaktivieren (Wayfire / labwc / X11)"
+
+# Ziel-User-Home ermitteln (Skript läuft als root via sudo)
+HOME_DIR="$(getent passwd "$USER" | cut -d: -f6)"
+[ -n "$HOME_DIR" ] && [ -d "$HOME_DIR" ] || HOME_DIR="/home/$USER"
+
+# --- Wayfire (Bookworm-Standard): Idle/DPMS nie abschalten ---
+WF_INI="$HOME_DIR/.config/wayfire.ini"
+if command -v wayfire >/dev/null 2>&1 || [ -f /usr/share/wayland-sessions/wayfire.desktop ]; then
+    mkdir -p "$(dirname "$WF_INI")"
+    if [ ! -f "$WF_INI" ]; then
+        if [ -f /etc/wayfire.ini ]; then
+            cp /etc/wayfire.ini "$WF_INI"
+        else
+            : > "$WF_INI"
+        fi
+    fi
+    if grep -q '^\[idle\]' "$WF_INI" 2>/dev/null; then
+        if grep -q '^[[:space:]]*screensaver_timeout' "$WF_INI"; then
+            sed -i 's/^[[:space:]]*screensaver_timeout.*/screensaver_timeout = -1/' "$WF_INI"
+        else
+            sed -i '/^\[idle\]/a screensaver_timeout = -1' "$WF_INI"
+        fi
+        if grep -q '^[[:space:]]*dpms_timeout' "$WF_INI"; then
+            sed -i 's/^[[:space:]]*dpms_timeout.*/dpms_timeout = -1/' "$WF_INI"
+        else
+            sed -i '/^\[idle\]/a dpms_timeout = -1' "$WF_INI"
+        fi
+    else
+        printf '\n[idle]\nscreensaver_timeout = -1\ndpms_timeout = -1\n' >> "$WF_INI"
+    fi
+    chown "$USER":"$USER" "$WF_INI" 2>/dev/null || true
+    ok "Wayfire: Idle/DPMS deaktiviert"
+fi
+
+# --- labwc (neuere Bookworm): swayidle-Zeile auskommentieren ---
+LABWC_AUTO="$HOME_DIR/.config/labwc/autostart"
+if command -v labwc >/dev/null 2>&1 || [ -f /usr/share/wayland-sessions/labwc.desktop ]; then
+    mkdir -p "$(dirname "$LABWC_AUTO")"
+    if [ ! -f "$LABWC_AUTO" ] && [ -f /etc/xdg/labwc/autostart ]; then
+        cp /etc/xdg/labwc/autostart "$LABWC_AUTO"
+    fi
+    if [ -f "$LABWC_AUTO" ]; then
+        sed -i '/swayidle/s/^/#/' "$LABWC_AUTO"
+        chown "$USER":"$USER" "$LABWC_AUTO" 2>/dev/null || true
+        ok "labwc: swayidle (Blanking) deaktiviert"
+    fi
+fi
+
+# --- X11 (Fallsicherung): DPMS/Screensaver aus ---
+if command -v xset >/dev/null 2>&1; then
+    XAUTO="$HOME_DIR/.config/lxsession/LXDE-pi/autostart"
+    mkdir -p "$(dirname "$XAUTO")"
+    append_line "$XAUTO" "@xset s off"
+    append_line "$XAUTO" "@xset -dpms"
+    append_line "$XAUTO" "@xset s noblank"
+    chown "$USER":"$USER" "$XAUTO" 2>/dev/null || true
+    ok "X11: DPMS/Screensaver deaktiviert (Fallsicherung)"
+fi
 
 # ---------------------------------------------------------------- App installieren
 log "App nach $APP_DIR installieren"
