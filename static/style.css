@@ -203,8 +203,11 @@
 
   /* ===== ADMIN ===== */
   .admin-wrap{max-width:1040px;margin:0 auto;padding:28px 24px 60px}
+  .admin-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
   .admin-head h1{font-size:26px;font-weight:800;color:var(--navy)}
   .admin-head p{color:var(--muted);margin-top:4px;font-size:15px}
+  .admin-actions{display:flex;align-items:center;gap:12px}
+  .logout-timer{font-size:13px;color:var(--muted);font-weight:600;white-space:nowrap}
 
   .gate{
     max-width:400px;margin:70px auto;background:var(--card);
@@ -349,5 +352,7 @@ a.btn{text-decoration:none}
 .legend .dot{width:21px;height:21px}
 
 /* Cursor nach Inaktivität ausblenden (wird per JS getoggelt, funktioniert auf Wayland) */
-body.hide-cursor, body.hide-cursor *{cursor:none !important}
+body.hide-cursor, body.hide-cursor *{
+  cursor: url(data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7) 1 1, none !important;
+}
 

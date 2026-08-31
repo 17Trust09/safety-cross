@@ -2,8 +2,14 @@
 {% block content %}
 <div class="admin-wrap">
   <div class="admin-head">
-    <h1>Administration</h1>
-    <p>Abteilung, Meister, Ersthelfer, Notruf &amp; Unfälle verwalten.</p>
+    <div class="admin-title">
+      <h1>Administration</h1>
+      <p>Abteilung, Meister, Ersthelfer, Notruf &amp; Unfälle verwalten.</p>
+    </div>
+    <div class="admin-actions">
+      <span class="logout-timer" id="logout-timer">Logout in 60 s</span>
+      <a class="btn ghost" href="{{ url_for('logout') }}">Abmelden</a>
+    </div>
   </div>
 
   <div class="card">
@@ -110,7 +116,6 @@
       <form method="post" action="{{ url_for('admin_shutdown') }}" onsubmit="return confirm('Raspberry Pi wirklich herunterfahren?')">
         <button class="btn ghost" type="submit">Herunterfahren</button>
       </form>
-      <a class="btn ghost" href="{{ url_for('logout') }}">Abmelden</a>
     </div>
   </div>
 
@@ -124,11 +129,26 @@
 </div>
 
 <script>
-  // Auto-Logout + Rückkehr zur Anzeige nach 60 s Inaktivität
+  // Auto-Logout nach 60 s Inaktivität — mit sichtbarem Countdown
   (function () {
-    var LOGOUT_MS = 60000, logoutTimer;
+    var LOGOUT_MS = 60000, remaining = LOGOUT_MS / 1000, logoutTimer, tickTimer;
+    var el = document.getElementById('logout-timer');
+    function render() {
+      if (el) el.textContent = 'Logout in ' + Math.max(remaining, 0) + ' s';
+    }
+    function startTicker() {
+      clearInterval(tickTimer);
+      tickTimer = setInterval(function () {
+        remaining--;
+        render();
+        if (remaining <= 0) clearInterval(tickTimer);
+      }, 1000);
+    }
     function reset() {
+      remaining = LOGOUT_MS / 1000;
+      render();
       clearTimeout(logoutTimer);
+      startTicker();
       logoutTimer = setTimeout(function () { window.location.href = "{{ url_for('logout') }}?next=/"; }, LOGOUT_MS);
     }
     ["mousemove", "mousedown", "keydown", "touchstart", "click", "scroll", "wheel"].forEach(function (evt) {

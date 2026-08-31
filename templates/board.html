@@ -44,7 +44,7 @@
   <main class="cross-panel">
     <div class="month-title">
       <a class="month-nav" href="{{ url_for('board', y=prev[0], m=prev[1]) }}">‹</a>
-      <span>{{ month_name }} {{ year }} <small>1–{{ days_in_month }}</small></span>
+      <span>{{ month_name }} {{ year }}</span>
       {% if not is_current %}<a class="month-nav" href="{{ url_for('board', y=next[0], m=next[1]) }}">›</a>{% endif %}
     </div>
     <div class="grid">
